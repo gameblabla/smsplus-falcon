@@ -23,3 +23,16 @@ Special thanks to Orion for his devkit though.
 You can also use the command line to start your own SMS or GG rom.
 
 If no files are specified, by default, it looks for test.gg.
+
+Controls
+========
+
+Key arrows = Move
+
+Left shift = Button 1
+
+Alt = Button 2
+
+Return = Start/Pause
+
+Space = Exit emulator

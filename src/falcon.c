@@ -30,8 +30,7 @@
 #define GG_SCREEN_HEIGHT   144
 
 static unsigned short substract;
-
-static int sdl_video_init()
+static void sdl_video_init()
 {
 	char *err;
 	unsigned short screen_width, screen_height;
@@ -39,110 +38,36 @@ static int sdl_video_init()
 	screen_height = (IS_GG) ? GG_SCREEN_HEIGHT : SMS_SCREEN_HEIGHT;
 	substract = (IS_GG) ? 7776 : 0;
 	
-	err = FalconInit(TRIPLE_BUFFER | EXIT_ON_SPACE_KEY | CT60_MODE, NULL, IS_GG);
+	err = FalconInit(TRIPLE_BUFFER | EXIT_ON_SPACE_KEY
+	#ifdef CTSIXTY
+	 | CT60_MODE | EMULATOR_MODE
+	 #endif
+	 , NULL, IS_GG);
 
 	memset(&bitmap, 0, sizeof(t_bitmap));
 	bitmap.width  = screen_width;
 	bitmap.height = screen_height;
 	bitmap.depth  = 16;
 	bitmap.pitch  = screen_width*2;
-
-	return 1;
 }
 
 
 static void sdl_controls_init()
 {
-  cfg.pad[0].up = IKBD_KEY_UP;
-  cfg.pad[0].down = IKBD_KEY_DOWN;
-  cfg.pad[0].left = IKBD_KEY_LEFT;
-  cfg.pad[0].right = IKBD_KEY_RIGHT;
-  cfg.pad[0].b1 = IKBD_KEY_LSHIFT;
-  cfg.pad[0].b2 = IKBD_KEY_ALT;
-  cfg.pad[0].start = IKBD_KEY_RETURN;
 }
 
 
-static int sdl_controls_update_input()
+static void sdl_controls_update_input()
 {
-	if (IKBD_Joystick0 == IKBD_JOY_UP)
-	{
-		input.pad[0] |= INPUT_UP;
-	}
-	else 
-		input.pad[0] &= ~INPUT_UP;
-		
-	if (IKBD_Joystick0 == IKBD_JOY_DOWN)
-	{
-		input.pad[0] |= INPUT_DOWN;
-	}
-	else 
-		input.pad[0] &= ~INPUT_DOWN;
-		
-	if (IKBD_Joystick0 == IKBD_JOY_LEFT)
-	{
-		input.pad[0] |= INPUT_LEFT;
-	}
-	else 
-		input.pad[0] &= ~INPUT_LEFT;
-		
-	if (IKBD_Joystick0 == IKBD_JOY_RIGHT)
-	{
-		input.pad[0] |= INPUT_RIGHT;
-	}
-	else 
-		input.pad[0] &= ~INPUT_RIGHT;
-		
-	if (IKBD_Joystick0 == IKBD_JOY_FIRE | IKBD_IsKeyPressed(cfg.pad[0].b1))
-	{
-		input.pad[0] |= INPUT_BUTTON1;
-	}
-	else 
-		input.pad[0] &= ~INPUT_BUTTON1;
-		
-	if(IKBD_IsKeyPressed(cfg.pad[0].b2))
-	{
-		input.pad[0] |= INPUT_BUTTON2;
-	}
-	else 
-		input.pad[0] &= ~INPUT_BUTTON2;
-		
-		
-	if(IKBD_IsKeyPressed(cfg.pad[0].start)) 
-	{
-		input.system |= (IS_GG) ? INPUT_START : INPUT_PAUSE;
-	}
-	else 
-		input.system &= (IS_GG) ? ~INPUT_START : ~INPUT_PAUSE;	
-  /*if(IKBD_IsKeyPressed(cfg.pad[0].start)) {
-    if(p) input.system |= (IS_GG) ? INPUT_START : INPUT_PAUSE;
-    else  input.system &= (IS_GG) ? ~INPUT_START : ~INPUT_PAUSE;
-  }
-  else if(IKBD_IsKeyPressed(cfg.pad[0].up)) {
-    if(p) input.pad[0] |= INPUT_UP;
-    else  input.pad[0] &= ~INPUT_UP;
-  }
-  else if(IKBD_IsKeyPressed(cfg.pad[0].down)) {
-    if(p) input.pad[0] |= INPUT_DOWN;
-    else  input.pad[0] &= ~INPUT_DOWN;
-  }
-  else if(IKBD_IsKeyPressed(cfg.pad[0].left)) {
-    if(p) input.pad[0] |= INPUT_LEFT;
-    else  input.pad[0] &= ~INPUT_LEFT;
-  }
-  else if(IKBD_IsKeyPressed(cfg.pad[0].right)) {
-    if(p) input.pad[0] |= INPUT_RIGHT;
-    else  input.pad[0] &= ~INPUT_RIGHT;
-  }
-  else if(IKBD_IsKeyPressed(cfg.pad[0].b1)) {
-    if(p) input.pad[0] |= INPUT_BUTTON1;
-    else  input.pad[0] &= ~INPUT_BUTTON1;
-  }
-  else if(IKBD_IsKeyPressed(cfg.pad[0].b2)) {
-    if(p) input.pad[0] |= INPUT_BUTTON2;
-    else  input.pad[0] &= ~INPUT_BUTTON2;
-  }*/
-  return 1;
+	input.pad[0] = 0;
+	if (IKBD_IsKeyPressed(IKBD_KEY_UP)) input.pad[0] |= INPUT_UP;
+	if (IKBD_IsKeyPressed(IKBD_KEY_DOWN)) input.pad[0] |= INPUT_DOWN;
+	if (IKBD_IsKeyPressed(IKBD_KEY_LEFT)) input.pad[0] |= INPUT_LEFT;
+	if (IKBD_IsKeyPressed(IKBD_KEY_RIGHT)) input.pad[0] |= INPUT_RIGHT;
+	
+	if (IKBD_IsKeyPressed(IKBD_KEY_LSHIFT)) input.pad[0] |= INPUT_BUTTON1;
+	if (IKBD_IsKeyPressed(IKBD_KEY_ALT)) input.pad[0] |= INPUT_BUTTON2;
+	if (IKBD_IsKeyPressed(IKBD_KEY_RETURN))  input.system |= (IS_GG) ? INPUT_START : INPUT_PAUSE;
 }
 
 static void sdl_video_update(void *screen)
@@ -157,9 +82,7 @@ static void sdl_video_update(void *screen)
 int sdl_main_init()
 {
 	system_init(cfg.sound_rate);
-	if(!sdl_video_init())
-		return 0;
-  
+	sdl_video_init();
 	return 1;
 }
 
@@ -168,8 +91,6 @@ void sdl_main_loop()
 {
 	FalconLoop(sdl_video_update);
 }
-
-
 
 void sdl_main_close()
 {
