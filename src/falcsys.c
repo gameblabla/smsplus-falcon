@@ -95,11 +95,21 @@ char	*FalconInit(u32 flags, u32 *pal, unsigned char resolution)
 	Supexec(SaveVidel);
 
 	// Set New Screen Resolution
-	if (resolution == 1)
-	res = Supexec(VGAGG);
+	if (VgetMonitor() == 1)
+	{
+		if (resolution == 1)
+			res = Supexec(RGBGG);
+		else
+			res = Supexec(RGBSMS_256192);	
+	}
 	else
-	res = Supexec(VGA256192);
-
+	{
+		if (resolution == 1)
+			res = Supexec(VGAGG);
+		else
+			res = Supexec(VGA256192);
+	}
+	
 	if (!res)
 	{
 		if (FS_Flags & CT60_MODE)

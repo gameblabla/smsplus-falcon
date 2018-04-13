@@ -186,6 +186,8 @@ extern IKBD_MouseData	IKBD_Mouse;	// Mouse data
 
 LONG VGA256192(void);
 LONG VGAGG(void);
+LONG RGBGG(void);
+LONG RGBSMS_256192(void);
 
 LONG	SetVidel(void);
 LONG	SaveVidel(void);
