@@ -18,3 +18,8 @@ Since true color is slow on the falcon, i would advise to stick with the GG vers
 Of course, this was ported by me, because no one cares about the Atari Falcon.
 
 Special thanks to Orion for his devkit though.
+
+
+You can also use the command line to start your own SMS or GG rom.
+
+If no files are specified, by default, it looks for test.gg.
