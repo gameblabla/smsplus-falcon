@@ -53,6 +53,9 @@ typedef signed short int FMSAMPLE;
 #endif
 #endif
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "z80.h"
 #include "sms.h"
 #include "vdp.h"

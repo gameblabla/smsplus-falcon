@@ -51,31 +51,27 @@ static void sdl_video_init()
 	bitmap.pitch  = screen_width*2;
 }
 
-
-static void sdl_controls_init()
-{
-}
-
-
 static void sdl_controls_update_input()
 {
 	input.pad[0] = 0;
-	if (IKBD_IsKeyPressed(IKBD_KEY_UP)) input.pad[0] |= INPUT_UP;
-	if (IKBD_IsKeyPressed(IKBD_KEY_DOWN)) input.pad[0] |= INPUT_DOWN;
-	if (IKBD_IsKeyPressed(IKBD_KEY_LEFT)) input.pad[0] |= INPUT_LEFT;
-	if (IKBD_IsKeyPressed(IKBD_KEY_RIGHT)) input.pad[0] |= INPUT_RIGHT;
+	input.system = 0;
 	
+	if (IKBD_IsKeyPressed(IKBD_KEY_UP)) input.pad[0] |= INPUT_UP;
+	else if (IKBD_IsKeyPressed(IKBD_KEY_DOWN)) input.pad[0] |= INPUT_DOWN;
+	if (IKBD_IsKeyPressed(IKBD_KEY_LEFT)) input.pad[0] |= INPUT_LEFT;
+	else if (IKBD_IsKeyPressed(IKBD_KEY_RIGHT)) input.pad[0] |= INPUT_RIGHT;
 	if (IKBD_IsKeyPressed(IKBD_KEY_LSHIFT)) input.pad[0] |= INPUT_BUTTON1;
 	if (IKBD_IsKeyPressed(IKBD_KEY_ALT)) input.pad[0] |= INPUT_BUTTON2;
 	if (IKBD_IsKeyPressed(IKBD_KEY_RETURN))  input.system |= (IS_GG) ? INPUT_START : INPUT_PAUSE;
 }
 
-static void sdl_video_update(void *screen)
+static int sdl_video_update(void *screen)
 {
-	sdl_controls_update_input();
 	bitmap.data   = (unsigned char *)screen - substract;
+	sdl_controls_update_input();
+	
     sms_frame(0);
-
+    
 	return (FL_COPY);
 }
 

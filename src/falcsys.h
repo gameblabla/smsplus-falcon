@@ -132,8 +132,8 @@ LONG	IKBD_MouseOff(void);	// Call with Supexec
 void	IKBD_ReadMouse(void);	// Call before reading IKBD_MouseX/Y
 void	IKBD_SetMouseOrigin(signed short x, signed short y, unsigned short w, unsigned short h);
 void	IKBD_Flush(void);
+
 #define	IKBD_IsKeyPressed(_scan_)	IKBD_Keyboard[_scan_]
-#define	IKBD_IsJoyPressed(_scan_)	IKBD_Keyboard[_scan_]
 
 void	SetVblColor(u32 color);
 

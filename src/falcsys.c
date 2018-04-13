@@ -148,6 +148,7 @@ char	*FalconInit(u32 flags, u32 *pal, unsigned char resolution)
 		FS_NewScreenAdrs = FS_STscreen[1];
 	else
 		FS_NewScreenAdrs = FS_STscreen[0];
+		
 	FS_VblAck = 0;
 	FS_CurrentScreen = 0;
 	FS_SetNewScreen = 1;
