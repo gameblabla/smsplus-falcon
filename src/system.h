@@ -36,53 +36,52 @@
 #define INPUT_HARD_RESET  (0x00000008)    /* Works for either console type */
 
 /* User input structure */
-typedef struct
+struct t_input
 {
-    int pad[2];
-    int system;
-}t_input;
+    unsigned char pad[2];
+    unsigned char system;
+};
 
-/* Sound emulation structure */
-typedef struct
+ struct t_snd
 {
     int enabled;
     int bufsize;
     signed short *buffer[2];
-    signed short *fm_buffer;        /* internal use only */
-    signed short *psg_buffer[2];    /* internal use only */
+    signed short *fm_buffer;
+    signed short *psg_buffer[2];
     int log;
     void (*callback)(int data);
-}t_snd;
+};
 
 /* Game image structure */
-typedef struct
+ struct t_cart
 {
     byte *rom;
     byte pages;
     byte type;
-}t_cart;
+};
 
 /* Bitmap structure */
-typedef struct
+ struct t_bitmap
 {
     unsigned char *data;
-    int width;
-    int height;
-    int pitch;
-    int depth;
+    unsigned short width;
+    unsigned char height;
+    unsigned short pitch;
+    unsigned char depth;
     struct
     {
         byte color[32][3];
         byte dirty[32];
         byte update;
     }pal;
-}t_bitmap;
+};
 
 /* Global variables */
-extern t_bitmap bitmap;     /* Display bitmap */
-extern t_snd snd;           /* Sound streams */
-extern t_cart cart;         /* Game cartridge data */
-extern t_input input;       /* Controller input */
+extern struct t_bitmap bitmap;     /* Display bitmap */
+extern struct t_snd snd;           /* Sound streams */
+extern struct t_cart cart;         /* Game cartridge data */
+extern struct t_input input;       /* Controller input */
 
 /* Function prototypes */
 void system_init(int rate);

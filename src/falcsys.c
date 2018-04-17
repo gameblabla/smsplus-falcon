@@ -6,7 +6,7 @@
 // C2P routine by Mikael Kalms from TBL, Improved by MiKRO
 // IKBD routine by Patrice Mandin
 
-#include "FALCSYS.H"
+#include "falcsys.h"
 
 void	*FS_screenadrsP;
 void	*FS_screenadrsL;
@@ -19,7 +19,7 @@ u32		FS_Flags;
 short	FS_ScreenWidth;
 short	FS_ScreenHeight;
 short	FS_ScreenBpp;
-
+static unsigned long SCREEN_SIZE;
 //---
 
 char	*FalconInit(u32 flags, u32 *pal, unsigned char resolution)
@@ -30,17 +30,10 @@ char	*FalconInit(u32 flags, u32 *pal, unsigned char resolution)
 	FS_PalettePtr = pal;
 	FS_VBLFuncPtr = NULL;
 
-	if (resolution == 1)
-	{
-		FS_ScreenWidth = 160;
-		FS_ScreenHeight = 144;
-	}
-	else
-	{
-		FS_ScreenWidth = 256;
-		FS_ScreenHeight = 192;
-	}
+	FS_ScreenWidth = 320;
+	FS_ScreenHeight = 240;
 	FS_ScreenBpp = 16;
+	SCREEN_SIZE	= (FS_ScreenWidth * FS_ScreenHeight * (FS_ScreenBpp / 8));
 
 	// Alloc ST Screen
 	if (!(FS_STscreen[0] = Mxalloc(SCREEN_SIZE, MX_STRAM)))
@@ -64,6 +57,7 @@ char	*FalconInit(u32 flags, u32 *pal, unsigned char resolution)
 		}
 
 	// Detect CT60 cookie if CT60_MODE set !
+	#ifdef _CT60
 	if (FS_Flags & CT60_MODE)
 	{
 		if (!Supexec(GetCT60Cookie))
@@ -90,30 +84,19 @@ char	*FalconInit(u32 flags, u32 *pal, unsigned char resolution)
 			return ("Not enough memory for FastRam Screen Buffer.");
 		}
 	}
+	#endif
 
 	// Save Current Screen & Palette
 	Supexec(SaveVidel);
 
 	// Set New Screen Resolution
-	if (VgetMonitor() == 1)
-	{
-		if (resolution == 1)
-			res = Supexec(RGBGG);
-		else
-			res = Supexec(RGBSMS_256192);	
-	}
-	else
-	{
-		if (resolution == 1)
-			res = Supexec(VGAGG);
-		else
-			res = Supexec(VGA256192);
-	}
-	
+	res = Supexec(SetVidel);
 	if (!res)
 	{
+		#ifdef _CT60
 		if (FS_Flags & CT60_MODE)
 			Mfree(FS_TTscreen);
+		#endif
 		if (FS_Flags & TRIPLE_BUFFER)
 			Mfree(FS_STscreen[2]);
 		if (FS_Flags & (DOUBLE_BUFFER | TRIPLE_BUFFER))
@@ -126,11 +109,13 @@ char	*FalconInit(u32 flags, u32 *pal, unsigned char resolution)
 	Supexec(IKBD_Install);
 
 	// Setup CPU Flags for Max Speed
+	#ifdef _CT60
 	if ((FS_Flags & CT60_MODE) && (!(FS_Flags & EMULATOR_MODE)))
 	{
 		Supexec(CpuSaveState);
 		Supexec(CpuEnableFullCacheSuperscalar);
 	}
+	#endif
 
 	// Clear Screens
 	VFastClear32(FS_STscreen[0], SCREEN_SIZE, 0);
@@ -138,8 +123,10 @@ char	*FalconInit(u32 flags, u32 *pal, unsigned char resolution)
 		VFastClear32(FS_STscreen[1], SCREEN_SIZE, 0);
 	if (FS_Flags & TRIPLE_BUFFER)
 		VFastClear32(FS_STscreen[2], SCREEN_SIZE, 0);
+	#ifdef _CT60
 	if (FS_Flags & CT60_MODE)
 		VFastClear32(FS_TTscreen, SCREEN_SIZE, 0);
+	#endif
 
 	// Set a Screen and Wait VSync
 	if (FS_Flags & TRIPLE_BUFFER)
@@ -167,10 +154,12 @@ void	FalconLoop(int (*func)(void *screen))
 		int	ret;
 
 		// Start User Function
+		#ifdef _CT60
 		if (FS_Flags & CT60_MODE)
 			ret = func(FS_TTscreen);
 		else
-			ret = func(FS_STscreen[FS_CurrentScreen]);
+		#endif
+		ret = func(FS_STscreen[FS_CurrentScreen]);
 
 		if (ret == FL_EXIT)
 			break;
@@ -178,25 +167,24 @@ void	FalconLoop(int (*func)(void *screen))
 		// C2P from TTRAM to STRAM (take about 70% of the VBL @ 60Hz)
 		// Optimized C2P is as fast as a raw planar 32bits copy
 		// This is due to STram being very slow
+		#ifdef _CT60
 		if (FS_Flags & CT60_MODE)
 		{
-			if (ret == FL_C2P)
-				FastC2P_8BPP(FS_TTscreen, FS_STscreen[FS_CurrentScreen], SCREEN_SIZE);
-			else
-				VFastCopy32(FS_TTscreen, FS_STscreen[FS_CurrentScreen], SCREEN_SIZE);
+			VFastCopy32(FS_TTscreen, FS_STscreen[FS_CurrentScreen], SCREEN_SIZE);
 		}
+		#endif
 
 		FS_NewScreenAdrs = FS_STscreen[FS_CurrentScreen];
 
 		// Flip Buffers
-		if (FS_Flags & TRIPLE_BUFFER)
-		{
+		/*if (FS_Flags & TRIPLE_BUFFER)
+		{*/
 			FS_CurrentScreen++;
 			if (FS_CurrentScreen == 3)
 				FS_CurrentScreen = 0;
-		}
+		/*}
 		else if (FS_Flags & DOUBLE_BUFFER)
-			FS_CurrentScreen ^= 1;
+			FS_CurrentScreen ^= 1;*/
 
 		// Set New Screen Flags for VBL routine
 		FS_SetNewScreen = 1;
@@ -217,16 +205,20 @@ void	FalconLoop(int (*func)(void *screen))
 void	FalconExit(void)
 {
 	// Restore CPU Flags
+	#ifdef _CT60
 	if ((FS_Flags & CT60_MODE) && (!(FS_Flags & EMULATOR_MODE)))
 		Supexec(CpuRestoreState);
+	#endif
 
 	// Restore Interrupts
 	Supexec(RestoreInterrupts);
 	Supexec(IKBD_Uninstall);
 
 	// Free Memory
+	#ifdef _CT60
 	if (FS_Flags & CT60_MODE)
 		Mfree(FS_TTscreen);
+	#endif
 	if (FS_Flags & TRIPLE_BUFFER)
 		Mfree(FS_STscreen[2]);
 	if (FS_Flags & (DOUBLE_BUFFER | TRIPLE_BUFFER))
@@ -238,7 +230,7 @@ void	FalconExit(void)
 }
 
 // ----
-
+#ifdef _CT60
 LONG	GetCT60Cookie(void)
 {
 	volatile u32 *cookie = *(u32**)0x5A0;
@@ -252,9 +244,9 @@ LONG	GetCT60Cookie(void)
 
 	return (0);
 }
-
+#endif
 // ----
-
+/*
 u32	SetVblColorC;
 
 LONG	SetVblColorS(void)
@@ -268,11 +260,12 @@ void	SetVblColor(u32 color)
 	SetVblColorC = color;
 	Supexec(SetVblColorS);
 }
-
+*/
 // ----
 
 #define	TIMER	*((volatile unsigned int *)0x4BA)
 
+/*
 void IKBD_Flush()
 {
 	unsigned char	i;
@@ -297,9 +290,9 @@ void IKBD_Flush()
 		while ((tick + 10) < TIMER);
 	} while(!flush_ok);
 }
-
+*/
 // ----
-
+/*
 IKBD_MouseData	IKBD_Mouse;
 
 void	IKBD_ReadMouse(void)
@@ -335,3 +328,4 @@ void	IKBD_SetMouseOrigin(signed short x, signed short y, unsigned short w, unsig
 	IKBD_MouseX = 0;
 	IKBD_MouseY = 0;
 }
+*/

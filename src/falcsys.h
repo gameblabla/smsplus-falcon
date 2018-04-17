@@ -9,11 +9,14 @@
 #ifndef	_FALCSYS_H_
 #define	_FALCSYS_H_
 
-#include "TYPES.H"
-#include <TOS.H>
+#include "types.h"
+#include <tos.h>
 
 //------------------------------------------
 // FalconInit Flags
+#define	VM_320x240_8BITS	0x00
+#define	VM_320x240_16BITS	0x01
+#define	VM_640x480_8BITS	0x02
 #define	DOUBLE_BUFFER		0x04
 #define	TRIPLE_BUFFER		0x08
 #define	CT60_MODE			0x10
@@ -34,7 +37,6 @@
 #define	SCREEN_WIDTH	FS_ScreenWidth
 #define	SCREEN_HEIGHT	FS_ScreenHeight
 #define	SCREEN_BPP		FS_ScreenBpp
-#define	SCREEN_SIZE		(FS_ScreenWidth * FS_ScreenHeight * (FS_ScreenBpp / 8))
 
 #define	MSEC_TO_TIMER(a)	((a) / (1000 / 200))
 
@@ -183,11 +185,6 @@ typedef struct
 }					IKBD_MouseData;
 
 extern IKBD_MouseData	IKBD_Mouse;	// Mouse data
-
-LONG VGA256192(void);
-LONG VGAGG(void);
-LONG RGBGG(void);
-LONG RGBSMS_256192(void);
 
 LONG	SetVidel(void);
 LONG	SaveVidel(void);

@@ -58,6 +58,11 @@
 #include "cpuintrf.h"
 #include "z80.h"
 #include "shared.h"
+
+
+extern void	VFastClear32(__reg("a0") void *dst, __reg("d0") u32 size, __reg("d1") u32 data);
+
+
 extern void cpu_writemem16(int address, int data);
 extern void cpu_writeport(int port, int data);
 extern int cpu_readport(int port);
@@ -4008,12 +4013,12 @@ void z80_reset(void *param)
 		int oldval, newval, val;
 		UINT8 *padd, *padc, *psub, *psbc;
         /* allocate big flag arrays once */
-		SZHVC_add = (UINT8 *)malloc(2*256*256);
-		SZHVC_sub = (UINT8 *)malloc(2*256*256);
-		if( !SZHVC_add || !SZHVC_sub )
+		SZHVC_add = (UINT8 *)Mxalloc(2*256*256, MX_STRAM);
+		SZHVC_sub = (UINT8 *)Mxalloc(2*256*256, MX_STRAM);
+		/*if( !SZHVC_add || !SZHVC_sub )
 		{
 			raise(SIGABRT);
-		}
+		}*/
 		padd = &SZHVC_add[	0*256];
 		padc = &SZHVC_add[256*256];
 		psub = &SZHVC_sub[	0*256];
@@ -4097,7 +4102,9 @@ void z80_reset(void *param)
 		if( (i & 0x0f) == 0x0f ) SZHV_dec[i] |= HF;
 	}
 
-	memset(&Z80, 0, sizeof(Z80));
+	//memset(&Z80, 0, sizeof(Z80));
+	VFastClear32(&Z80, sizeof(Z80), 0);
+	
 	_IX = _IY = 0xffff; /* IX and IY are FFFF after a reset! */
 	_F = ZF;			/* Zero flag is set */
 	Z80.request_irq = -1;
@@ -4123,9 +4130,9 @@ void z80_reset(void *param)
 void z80_exit(void)
 {
 #if BIG_FLAGS_ARRAY
-	if (SZHVC_add) free(SZHVC_add);
+	if (SZHVC_add) Mfree(SZHVC_add);
     SZHVC_add = 0;
-	if (SZHVC_sub) free(SZHVC_sub);
+	if (SZHVC_sub) Mfree(SZHVC_sub);
     SZHVC_sub = 0;
 #endif
 }

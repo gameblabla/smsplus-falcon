@@ -4,9 +4,48 @@
 //#define CLEAR_LINE      0       /* clear (a fired, held or pulsed) line */
 //#define ASSERT_LINE     1       /* assert an interrupt immediately */
 
-
 #include "cpuintrf.h"
 #include "osd_cpu.h"
+
+#define MX_STRAM		0
+#ifndef WORD
+#define WORD short int
+#endif
+#ifndef UWORD
+#define UWORD unsigned short int
+#endif
+#ifndef LONG
+#define LONG long int
+#endif
+#ifndef ULONG
+#define ULONG unsigned long int
+#endif
+#ifndef VOIDP
+#define VOIDP void*
+#endif
+#ifndef VOID
+#define VOID void
+#endif
+
+__regsused("d0/d1/a0/a1") VOIDP Mxalloc(__reg("d0")LONG,__reg("d1")WORD) =
+  "\tmove.l\td2,-(sp)\n"
+  "\tmove.l\ta2,-(sp)\n"
+  "\tmove.w\td1,-(sp)\n"
+  "\tmove.l\td0,-(sp)\n"
+  "\tmove.w\t#68,-(sp)\n"
+  "\ttrap\t#1\n"
+  "\taddq.l\t#8,sp\n"
+  "\tmove.l\t(sp)+,a2\n"
+  "\tmove.l\t(sp)+,d2";
+  __regsused("d0/d1/a0/a1") WORD Mfree(__reg("a0")VOIDP) =
+  "\tmove.l\td2,-(sp)\n"
+  "\tmove.l\ta2,-(sp)\n"
+  "\tmove.l\ta0,-(sp)\n"
+  "\tmove.w\t#73,-(sp)\n"
+  "\ttrap\t#1\n"
+  "\taddq.l\t#6,sp\n"
+  "\tmove.l\t(sp)+,a2\n"
+  "\tmove.l\t(sp)+,d2";
 
 enum {
 	Z80_PC=1, Z80_SP, Z80_AF, Z80_BC, Z80_DE, Z80_HL,

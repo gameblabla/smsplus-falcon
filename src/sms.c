@@ -1,5 +1,5 @@
 #include "shared.h"
-
+#include "falcsys.h"
 /* SMS context */
 t_sms sms;
 
@@ -52,9 +52,13 @@ void sms_init(void)
 void sms_reset(void)
 {
     /* Clear SMS context */
-    memset(sms.dummy, 0, 0x2000);
-    memset(sms.ram, 0, 0x2000);
-    memset(sms.sram, 0, 0x8000);
+    //memset(sms.dummy, 0, 0x2000);
+    //memset(sms.ram, 0, 0x2000);
+    //memset(sms.sram, 0, 0x8000);
+    VFastClear32(sms.dummy, 0x2000, 0);
+    VFastClear32(sms.ram, 0x2000, 0);
+    VFastClear32(sms.sram, 0x8000, 0);
+    
     sms.paused = sms.save = sms.port_3F = sms.port_F2 = sms.irq = 0x00;
     sms.psg_mask = 0xFF;
 

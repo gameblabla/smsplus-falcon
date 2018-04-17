@@ -19,42 +19,72 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <tos.h>
 #include "shared.h"
 #include "config.h"
+
+static char* my_strstr(char *s2, char *s1)
+{
+	unsigned short i, j;
+	unsigned char flag = 0;
+
+	if ((s2 == NULL || s1 == NULL)) return NULL;
+
+	for( i = 0; s2[i] != '\0'; i++)
+	{
+		if (s2[i] == s1[0])
+		{
+			for (j = i; ; j++)
+			{
+				if (s1[j-i] == '\0'){ flag = 1; break;}
+				if (s2[j] == s1[j-i]) continue;
+				else break;
+			}
+		}
+		if (flag == 1) break;
+	}
+	if (flag) return (s2+i);
+	else return NULL;
+}
 
 /* Load a game file */
 int load_rom(char *filename)
 {
 	int size;
-	FILE *fd = NULL;
+	int fd, handle;
 	
-	fd = fopen(filename, "rb");
+	fd = Fopen(filename, 1);
 	if(!fd) return (0);
 
 	/* Seek to end of file, and get size */
-	fseek(fd, 0, SEEK_END);
-	size = ftell(fd);
-	fseek(fd, 0, SEEK_SET);
+	Fseek(0, fd,  SEEK_END);
+	handle = fd & 0xFFFF;
+	size = Fseek(0, handle, 2);
+	Fseek(0, handle, 0);
 
 	/* Don't load games smaller than 32k */
 	if(size < 0x8000) 
 	{
-		if(fd) fclose(fd);
+		//if(fd) fclose(fd);
+		if(fd) Fclose(fd);
 		return (0);
 	}
 
 	/* Take care of image header, if present */
-	if((size / 512) & 1) {
+	if((size / 512) & 1) 
+	{
 		size -= 512;
-		fseek(fd, 512, SEEK_SET);
+		//fseek(fd, 512, SEEK_SET);
+		Fseek(512, fd, SEEK_SET);
 	}
 
 	cart.pages = (size / 0x4000);
-	cart.rom = malloc(size);
+	cart.rom = (unsigned char*) Mxalloc(size, MX_STRAM);
 	if(!cart.rom) return (0);
-	fread(cart.rom, size, 1, fd);
+	Fread(handle, size, cart.rom);
 
-	if(fd) fclose(fd);
+	//if(fd) fclose(fd);
+	if(fd) Fclose(fd);
 
 	/* Figure out game image type */
 	#ifdef GG_BUILD
@@ -63,7 +93,7 @@ int load_rom(char *filename)
 		cart.type = TYPE_SMS;
 	#endif
 	
-	if (strstr (filename,".gg"))
+	if (my_strstr (filename,".gg"))
 	{
 		cart.type = TYPE_GG;
 	}
@@ -79,7 +109,7 @@ int load_rom(char *filename)
 /* Load SRAM data */
 void load_sram(char* game_name)
 {
-    char name[0x100];
+    /*char name[0x100];
     FILE *fd;
     strcpy(name, game_name);
     strcpy(strrchr(name, '.'), ".sav");
@@ -88,14 +118,14 @@ void load_sram(char* game_name)
         sms.save = 1;
         fread(sms.sram, 0x8000, 1, fd);
         fclose(fd);
-    }
+    }*/
 }
 
 
 /* Save SRAM data */
 void save_sram(char* game_name)
 {
-    if(sms.save) {
+    /*if(sms.save) {
         char name[0x100];
         FILE *fd = NULL;
         strcpy(name, game_name);
@@ -105,14 +135,14 @@ void save_sram(char* game_name)
             fwrite(sms.sram, 0x8000, 1, fd);
             fclose(fd);
         }
-    }
+    }*/
 }
 
 
 /* Load system state */
 int load_state(char* game_name, int state_slot)
 {
-    char name[0x100];
+    /*char name[0x100];
     FILE *fd = NULL;
     strcpy(name, game_name);
     sprintf(strrchr(name, '.'), ".st%d", state_slot);
@@ -120,14 +150,14 @@ int load_state(char* game_name, int state_slot)
     if(!fd) return (0);
     system_load_state(fd);
     fclose(fd);
-    return (1);
+    return (1);*/
 }
 
 
 /* Save system state */
 int save_state(char* game_name, int state_slot)
 {
-    char name[0x100];
+    /*char name[0x100];
     FILE *fd = NULL;
     strcpy(name, game_name);
     sprintf(strrchr(name, '.'), ".st%d", state_slot);
@@ -135,12 +165,12 @@ int save_state(char* game_name, int state_slot)
     if(!fd) return (0);
     system_save_state(fd);
     fclose(fd);
-    return(1);
+    return(1);*/
 }
 
 
 /* This is called in system_reset() */
 void system_load_sram(void) 
 {
-  load_sram(cfg.game_name);
+ // load_sram(cfg.game_name);
 }

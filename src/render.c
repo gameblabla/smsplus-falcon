@@ -1,4 +1,5 @@
 #include "shared.h"
+#include "falcsys.h"
 
 /* Pointer to output buffer */
 byte *linebuf;
@@ -95,7 +96,8 @@ void render_init(void)
     int bx, sx, b, s, bp, bf, sf, c;
 
     /* Generate 64k of data for the look up table */
-    for(bx = 0; bx < 0x100; bx += 1)
+    bx = 0x100;
+    while(bx--)
     {
         for(sx = 0; sx < 0x100; sx += 1)
         {
@@ -141,18 +143,22 @@ void render_reset(void)
     int i;
 
     /* Clear display bitmap */
-    memset(bitmap.data, 0, bitmap.pitch * bitmap.height);
+    //memset(bitmap.data, 0, bitmap.pitch * bitmap.height);
+    //VFastClear32(bitmap.data, bitmap.pitch * bitmap.height, 0);
 
     /* Clear palette */
-    for(i = 0; i < PALETTE_SIZE; i += 1)
+    i = PALETTE_SIZE;
+    while(i--)
     {
         palette_sync(i);
     }
 
     /* Invalidate pattern cache */
     is_vram_dirty = 1;
-    memset(vram_dirty, 1, 0x200);
-    memset(cache, 0, sizeof(cache));
+	//memset(vram_dirty, 1, 0x200);
+	VFastClear32(vram_dirty, 0x200, 1);
+    //memset(cache, 0, sizeof(cache));
+	VFastClear32(cache, 0x20000, 0);
 
     /* Set up viewport size */
     if(IS_GG)
@@ -293,7 +299,8 @@ void render_obj(int line)
     }
 
     /* Draw sprites in front-to-back order */
-    for(i = 0; i < 64; i += 1)
+    i = 64;
+	while(i--)
     {
         /* Sprite Y position */
         int yp = st[i];
@@ -411,27 +418,30 @@ void render_obj(int line)
 /* Update pattern cache with modified tiles */
 void update_cache(void)
 {
-    int i, x, y, c;
-    int b0, b1, b2, b3;
-    int i0, i1, i2, i3;
+    unsigned long i, x, y, c;
+    unsigned long b0, b1, b2, b3;
+    unsigned long i0, i1, i2, i3;
 
     if(!is_vram_dirty) return;
     is_vram_dirty = 0;
 
-    for(i = 0; i < 0x200; i += 1)
+	i = 0x200;
+    while(i--)
     {
         if(vram_dirty[i])
         {
             vram_dirty[i] = 0;
 
-            for(y = 0; y < 8; y += 1)
+			y = 8;
+            while(y--)
             {
                 b0 = vdp.vram[(i << 5) | (y << 2) | (0)];
                 b1 = vdp.vram[(i << 5) | (y << 2) | (1)];
                 b2 = vdp.vram[(i << 5) | (y << 2) | (2)];
                 b3 = vdp.vram[(i << 5) | (y << 2) | (3)];
-
-                for(x = 0; x < 8; x += 1)
+				
+				x = 8;
+                while(x--)
                 {
                     i0 = (b0 >> (7 - x)) & 1;
                     i1 = (b1 >> (7 - x)) & 1;
@@ -481,12 +491,13 @@ void palette_sync(int index)
 
 void remap_8_to_16(int line)
 {
-    int i;
+    unsigned long i;
     int length = BMP_WIDTH;
     int ofs = BMP_X_OFFSET;
     word *p = (word *)&bitmap.data[(line * bitmap.pitch) + (ofs << 1)];
 
-    for(i = 0; i < length; i += 1)
+	i = length;
+    while(i--)
     {
         p[i] = pixel[(internal_buffer[(ofs + i)] & PIXEL_MASK)];
     }        

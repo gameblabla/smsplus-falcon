@@ -17,13 +17,14 @@
 */
 #include <stdlib.h>
 #include <stdio.h>
+#include <tos.h>
 #include "shared.h"
+#include "falcsys.h"
 
-
-t_bitmap bitmap;
-t_cart cart;                
-t_snd snd;
-t_input input;
+struct t_bitmap bitmap;
+struct t_cart cart;                
+struct t_snd snd;
+struct t_input input;
 
 void system_init(int rate)
 {
@@ -40,11 +41,14 @@ void system_init(int rate)
     sms.save = 0;
 
     /* Clear emulated button state */
-    memset(&input, 0, sizeof(t_input));
+    input.pad[0] = 0;
+    input.system = 0;
+    input.pad[1] = 0;
 }
 
 void system_shutdown(void)
 {
+	if (cart.rom) Mfree(cart.rom);
 }
 
 
@@ -61,43 +65,35 @@ void system_reset(void)
 void system_save_state(void *fd)
 {
     /* Save VDP context */
-    fwrite(&vdp, sizeof(t_vdp), 1, fd);
-
-    /* Save SMS context */
+    /*fwrite(&vdp, sizeof(t_vdp), 1, fd);
     fwrite(&sms, sizeof(t_sms), 1, fd);
 
-    /* Save Z80 context */
     fwrite(Z80_Context, sizeof(Z80_Regs), 1, fd);
-    fwrite(&after_EI, sizeof(int), 1, fd);
+    fwrite(&after_EI, sizeof(int), 1, fd);*/
 }
 
 
 void system_load_state(void *fd)
 {
-    int i;
+   /* int i;
 
-    /* Initialize everything */
     cpu_reset();
     system_reset();
 
-    /* Load VDP context */
     fread(&vdp, sizeof(t_vdp), 1, fd);
 
-    /* Load SMS context */
     fread(&sms, sizeof(t_sms), 1, fd);
 
-    /* Load Z80 context */
     fread(Z80_Context, sizeof(Z80_Regs), 1, fd);
     fread(&after_EI, sizeof(int), 1, fd);
 
-    /* Restore callbacks */
     z80_set_irq_callback(sms_irq_callback);
 
-    cpu_readmap[0] = cart.rom + 0x0000; /* 0000-3FFF */
+    cpu_readmap[0] = cart.rom + 0x0000; 
     cpu_readmap[1] = cart.rom + 0x2000;
-    cpu_readmap[2] = cart.rom + 0x4000; /* 4000-7FFF */
+    cpu_readmap[2] = cart.rom + 0x4000; 
     cpu_readmap[3] = cart.rom + 0x6000;
-    cpu_readmap[4] = cart.rom + 0x0000; /* 0000-3FFF */
+    cpu_readmap[4] = cart.rom + 0x0000; 
     cpu_readmap[5] = cart.rom + 0x2000;
     cpu_readmap[6] = sms.ram;
     cpu_readmap[7] = sms.ram;
@@ -116,11 +112,9 @@ void system_load_state(void *fd)
     sms_mapper_w(1, sms.fcr[1]);
     sms_mapper_w(0, sms.fcr[0]);
 
-    /* Force full pattern cache update */
     is_vram_dirty = 1;
     memset(vram_dirty, 1, 0x200);
 
-    /* Restore palette */
     for(i = 0; i < PALETTE_SIZE; i += 1)
-        palette_sync(i);
+        palette_sync(i);*/
 }

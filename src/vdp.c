@@ -1,5 +1,5 @@
 #include "shared.h"
-
+#include "falcsys.h"
 
 /* VDP context */
 t_vdp vdp;
@@ -68,7 +68,8 @@ void vdp_init(void)
 /* Reset VDP emulation */
 void vdp_reset(void)
 {
-    memset(&vdp, 0, sizeof(t_vdp));
+    //memset(&vdp, 0, sizeof(t_vdp));
+    VFastClear32(&vdp, sizeof(t_vdp), 0);
     vdp.limit = 1;
 }
 

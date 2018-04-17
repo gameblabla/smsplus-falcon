@@ -29,26 +29,19 @@
 #define GG_SCREEN_WIDTH    160
 #define GG_SCREEN_HEIGHT   144
 
-static unsigned short substract;
 static void sdl_video_init()
 {
 	char *err;
-	unsigned short screen_width, screen_height;
-	screen_width  = (IS_GG) ? GG_SCREEN_WIDTH  : SMS_SCREEN_WIDTH;
-	screen_height = (IS_GG) ? GG_SCREEN_HEIGHT : SMS_SCREEN_HEIGHT;
-	substract = (IS_GG) ? 7776 : 0;
-	
-	err = FalconInit(TRIPLE_BUFFER | EXIT_ON_SPACE_KEY
-	#ifdef CTSIXTY
-	 | CT60_MODE | EMULATOR_MODE
-	 #endif
-	 , NULL, IS_GG);
+	err = FalconInit(VM_320x240_16BITS | TRIPLE_BUFFER | EXIT_ON_SPACE_KEY
+	#ifdef _CT60
+	| CT60_MODE | EMULATOR_MODE
+	#endif
+	, NULL, 0);
 
-	memset(&bitmap, 0, sizeof(t_bitmap));
-	bitmap.width  = screen_width;
-	bitmap.height = screen_height;
+	bitmap.width  = 320;
+	bitmap.height = 240;
 	bitmap.depth  = 16;
-	bitmap.pitch  = screen_width*2;
+	bitmap.pitch  = 640;
 }
 
 static void sdl_controls_update_input()
@@ -67,11 +60,9 @@ static void sdl_controls_update_input()
 
 static int sdl_video_update(void *screen)
 {
-	bitmap.data   = (unsigned char *)screen - substract;
+	bitmap.data   = (unsigned char *)screen + 9020;
 	sdl_controls_update_input();
-	
-    sms_frame(0);
-    
+	sms_frame(0);
 	return (FL_COPY);
 }
 
